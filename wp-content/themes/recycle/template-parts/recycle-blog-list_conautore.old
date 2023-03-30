@@ -1,0 +1,47 @@
+<?php 
+global $recycle;
+if(!empty($recycle['posts-list-banner']['url']))
+{
+	$banner=$recycle['posts-list-banner']['url'];
+}
+?>
+<?php if(!empty($banner)){ ?>
+<section class="inner-page-banner section-padding" <?php if(!empty($banner)){ ?>style="background:url(<?php echo esc_url($banner); ?>) fixed;" <?php } ?>>
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+      <?php if(!empty($banner)){ ?>
+      	 <h1>Blog Listing</h1>
+         <h6>Home / Blog Listing</h6>
+      <?php }else{ ?>
+         <h1 class="nobg">Blog Listing</h1>
+         <h6 class="nobg">Home / Blog Listing</h6>
+      <?php } ?>  
+      </div>
+    </div>
+  </div>
+</section>
+<?php } ?>
+<section class="blog-sec">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-9">
+        <?php while ( have_posts() ) : the_post(); ?>
+        <div class="blog-post wow fadeInLeft"> <?php the_post_thumbnail(array(850, 600),array('class' => 'img-responsive')); ?>
+          <h3><a href="<?php the_permalink() ?>"><?php the_title(); ?></a></h3>
+          <h5><span></span> <?php the_time('F jS, Y') ?>   &nbsp; &nbsp; &nbsp; <span>By</span> <a href="#"><?php the_author() ?></a> </h5>
+          <?php the_excerpt(); ?>
+          <a href="<?php the_permalink(); ?>" class="btn btn-small">Leggi tutto</a>
+        </div>
+        <?php endwhile;?> 
+		<?php the_posts_pagination( array(
+				'prev_text'          => __( '<< Previous page', 'recycle' ),
+				'next_text'          => __( 'Next page >>', 'recycle' ),
+				'before_page_number' => '<span class="meta-nav screen-reader-text">' . __( 'Page', 'recycle' ) . ' </span>',
+			) );
+		?>	
+      </div>
+      <?php get_sidebar(); ?>
+    </div>
+  </div>
+</section>
