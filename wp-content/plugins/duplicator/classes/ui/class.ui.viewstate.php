@@ -1,5 +1,4 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 /**
  * Gets the view state of UI elements to remember its viewable state
  *

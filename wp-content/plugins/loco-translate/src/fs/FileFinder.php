@@ -17,8 +17,8 @@ class Loco_fs_FileFinder implements Iterator, Countable, Loco_fs_FileListInterfa
     private $subdir;
     
     /**
-     * Whether directories all read into memory
-     * @var bool
+     * whether directories all read into memory
+     * @var Loco_fs_FileList
      */
     private $cached;
 
@@ -29,19 +29,19 @@ class Loco_fs_FileFinder implements Iterator, Countable, Loco_fs_FileListInterfa
     private $cache;
     
     /**
-     * Internal array pointer for whole list of paths
+     * internal array pointer for whole list of paths
      * @var int
      */
     private $i;
     
     /**
-     * Internal pointer for directory being read
+     * internal pointer for directory being read
      * @var int
      */
     private $d;
     
     /**
-     * Current directory being read
+     * current directory being read
      * @var resource
      */
     private $dir;
@@ -73,7 +73,7 @@ class Loco_fs_FileFinder implements Iterator, Countable, Loco_fs_FileListInterfa
     private $symlinks = true;
 
     /**
-     * Registry of followed links by their original path
+     * Registry of followed links by their resolved path
      * @var Loco_fs_FileList
      */
     private $linked;
@@ -367,8 +367,9 @@ class Loco_fs_FileFinder implements Iterator, Countable, Loco_fs_FileListInterfa
                     continue;
                 }
                 // file represented as object containing original path
-                $file = new Loco_fs_File($path);
+                $file = new Loco_fs_File( $path );
                 $this->add( $file );
+                $this->i++;
                 return $file;
             }
             $this->close();
@@ -386,24 +387,23 @@ class Loco_fs_FileFinder implements Iterator, Countable, Loco_fs_FileListInterfa
     }
 
 
+
     /**
-     * {@inheritDoc}
+     * Implement FileListInterface::add
+     * @param Loco_fs_File
      */
     public function add( Loco_fs_File $file ){
         if( $this->exts ){
             $ext = $file->extension();
             if( ! isset($this->exts[$ext]) ){
-                return false;
+                return;
             }
-            $this->exts[$ext]->add($file);
+            $this->exts[$ext]->add( $file );
         }
-        if( $this->cache->add($file) ){
-            $this->i++;
-            return true;
-        }
-        return false;
+        $this->cache->add( $file );
     }
 
+    
 
     /**
      * @return int
@@ -447,17 +447,12 @@ class Loco_fs_FileFinder implements Iterator, Countable, Loco_fs_FileListInterfa
     }
 
 
-    /**
-     * @return int
-     */
+
     public function key(){
         return $this->i;
     }
 
 
-    /**
-     * @return bool
-     */
     public function valid(){
         // may be in lazy state after rewind
         // must do initial read now in case list is empty

@@ -16,9 +16,6 @@ class autoptimizeHTML extends autoptimizeBase
      */
     private $keepcomments = false;
 
-    /** @var bool */
-    private $forcexhtml = false;
-
     /**
      * Things to exclude from being minifed.
      *

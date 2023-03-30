@@ -3385,9 +3385,6 @@ function wp_get_recent_posts( $args = array(), $output = ARRAY_A ) {
 function wp_insert_post( $postarr, $wp_error = false ) {
 	global $wpdb;
 
-	// Capture original pre-sanitized array for passing into filters.
-	$unsanitized_postarr = $postarr;
-
 	$user_id = get_current_user_id();
 
 	$defaults = array(
@@ -3699,27 +3696,21 @@ function wp_insert_post( $postarr, $wp_error = false ) {
 		 * Filters attachment post data before it is updated in or added to the database.
 		 *
 		 * @since 3.9.0
-		 * @since 5.4.1 `$unsanitized_postarr` argument added.
 		 *
-		 * @param array $data                An array of slashed, sanitized, and processed attachment post data.
-		 * @param array $postarr             An array of slashed and sanitized attachment post data, but not processed.
-		 * @param array $unsanitized_postarr An array of slashed yet *unsanitized* and unprocessed attachment post data
-		 *                                   as originally passed to wp_insert_post().
+		 * @param array $data    An array of sanitized attachment post data.
+		 * @param array $postarr An array of unsanitized attachment post data.
 		 */
-		$data = apply_filters( 'wp_insert_attachment_data', $data, $postarr, $unsanitized_postarr );
+		$data = apply_filters( 'wp_insert_attachment_data', $data, $postarr );
 	} else {
 		/**
 		 * Filters slashed post data just before it is inserted into the database.
 		 *
 		 * @since 2.7.0
-		 * @since 5.4.1 `$unsanitized_postarr` argument added.
 		 *
-		 * @param array $data                An array of slashed, sanitized, and processed post data.
-		 * @param array $postarr             An array of sanitized (and slashed) but otherwise unmodified post data.
-		 * @param array $unsanitized_postarr An array of slashed yet *unsanitized* and unprocessed post data as
-		 *                                   originally passed to wp_insert_post().
+		 * @param array $data    An array of slashed post data.
+		 * @param array $postarr An array of sanitized, but otherwise unmodified post data.
 		 */
-		$data = apply_filters( 'wp_insert_post_data', $data, $postarr, $unsanitized_postarr );
+		$data = apply_filters( 'wp_insert_post_data', $data, $postarr );
 	}
 	$data  = wp_unslash( $data );
 	$where = array( 'ID' => $post_ID );
@@ -5483,7 +5474,7 @@ function wp_delete_attachment_files( $post_id, $meta, $backup_sizes, $file ) {
 	if ( ! empty( $meta['thumb'] ) ) {
 		// Don't delete the thumb if another attachment uses it.
 		if ( ! $wpdb->get_row( $wpdb->prepare( "SELECT meta_id FROM $wpdb->postmeta WHERE meta_key = '_wp_attachment_metadata' AND meta_value LIKE %s AND post_id <> %d", '%' . $wpdb->esc_like( $meta['thumb'] ) . '%', $post_id ) ) ) {
-			$thumbfile = str_replace( wp_basename( $file ), $meta['thumb'], $file );
+			$thumbfile = str_replace( basename( $file ), $meta['thumb'], $file );
 			if ( ! empty( $thumbfile ) ) {
 				$thumbfile = path_join( $uploadpath['basedir'], $thumbfile );
 				$thumbdir  = path_join( $uploadpath['basedir'], dirname( $file ) );
@@ -5499,7 +5490,7 @@ function wp_delete_attachment_files( $post_id, $meta, $backup_sizes, $file ) {
 	if ( isset( $meta['sizes'] ) && is_array( $meta['sizes'] ) ) {
 		$intermediate_dir = path_join( $uploadpath['basedir'], dirname( $file ) );
 		foreach ( $meta['sizes'] as $size => $sizeinfo ) {
-			$intermediate_file = str_replace( wp_basename( $file ), $sizeinfo['file'], $file );
+			$intermediate_file = str_replace( basename( $file ), $sizeinfo['file'], $file );
 			if ( ! empty( $intermediate_file ) ) {
 				$intermediate_file = path_join( $uploadpath['basedir'], $intermediate_file );
 
@@ -5625,7 +5616,7 @@ function wp_get_attachment_url( $attachment_id = 0 ) {
 				$url = str_replace( $uploads['basedir'], $uploads['baseurl'], $file );
 			} elseif ( false !== strpos( $file, 'wp-content/uploads' ) ) {
 				// Get the directory name relative to the basedir (back compat for pre-2.7 uploads)
-				$url = trailingslashit( $uploads['baseurl'] . '/' . _wp_get_attachment_relative_path( $file ) ) . wp_basename( $file );
+				$url = trailingslashit( $uploads['baseurl'] . '/' . _wp_get_attachment_relative_path( $file ) ) . basename( $file );
 			} else {
 				// It's a newly-uploaded file, therefore $file is relative to the basedir.
 				$url = $uploads['baseurl'] . "/$file";
@@ -5713,7 +5704,7 @@ function wp_get_attachment_thumb_file( $post_id = 0 ) {
 
 	$file = get_attached_file( $post->ID );
 
-	if ( ! empty( $imagedata['thumb'] ) && ( $thumbfile = str_replace( wp_basename( $file ), $imagedata['thumb'], $file ) ) && file_exists( $thumbfile ) ) {
+	if ( ! empty( $imagedata['thumb'] ) && ( $thumbfile = str_replace( basename( $file ), $imagedata['thumb'], $file ) ) && file_exists( $thumbfile ) ) {
 		/**
 		 * Filters the attachment thumbnail file path.
 		 *
@@ -5753,7 +5744,7 @@ function wp_get_attachment_thumb_url( $post_id = 0 ) {
 		return false;
 	}
 
-	$url = str_replace( wp_basename( $url ), wp_basename( $thumb ), $url );
+	$url = str_replace( basename( $url ), basename( $thumb ), $url );
 
 	/**
 	 * Filters the attachment thumbnail URL.
@@ -5905,7 +5896,7 @@ function wp_mime_type_icon( $mime = 0 ) {
 				$uri  = array_shift( $dirs );
 				if ( $dh = opendir( $dir ) ) {
 					while ( false !== $file = readdir( $dh ) ) {
-						$file = wp_basename( $file );
+						$file = basename( $file );
 						if ( substr( $file, 0, 1 ) == '.' ) {
 							continue;
 						}
@@ -5924,9 +5915,9 @@ function wp_mime_type_icon( $mime = 0 ) {
 		}
 
 		$types = array();
-		// Icon wp_basename - extension = MIME wildcard.
+		// Icon basename - extension = MIME wildcard.
 		foreach ( $icon_files as $file => $uri ) {
-			$types[ preg_replace( '/^([^.]*).*$/', '$1', wp_basename( $file ) ) ] =& $icon_files[ $file ];
+			$types[ preg_replace( '/^([^.]*).*$/', '$1', basename( $file ) ) ] =& $icon_files[ $file ];
 		}
 
 		if ( ! empty( $mime ) ) {
@@ -6899,21 +6890,4 @@ function _filter_query_attachment_filenames( $clauses ) {
  */
 function wp_cache_set_posts_last_changed() {
 	wp_cache_set( 'last_changed', microtime(), 'posts' );
-}
-
-/**
- * Get all available post MIME types for a given post type.
- *
- * @since 2.5.0
- *
- * @global wpdb $wpdb WordPress database abstraction object.
- *
- * @param string $type
- * @return mixed
- */
-function get_available_post_mime_types( $type = 'attachment' ) {
-	global $wpdb;
-
-	$types = $wpdb->get_col( $wpdb->prepare( "SELECT DISTINCT post_mime_type FROM $wpdb->posts WHERE post_type = %s", $type ) );
-	return $types;
 }

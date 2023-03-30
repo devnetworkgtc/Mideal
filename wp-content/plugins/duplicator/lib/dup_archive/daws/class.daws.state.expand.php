@@ -1,5 +1,4 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -18,7 +17,7 @@ class DAWSExpandState extends DupArchiveExpandState
     {
         $stateFilepath = dirname(__FILE__).'/'.self::StateFilename;
 
-        DupLiteSnapLibIOU::rm($stateFilepath, false);
+        SnapLibIOU::rm($stateFilepath, false);
     }
 
     public static function getInstance($reset = false)
@@ -29,9 +28,9 @@ class DAWSExpandState extends DupArchiveExpandState
             self::$instance = new DAWSExpandState();
 
             if (file_exists($stateFilepath)) {
-                $stateHandle = DupLiteSnapLibIOU::fopen($stateFilepath, 'rb');
+                $stateHandle = SnapLibIOU::fopen($stateFilepath, 'rb');
 
-               // RSR we shouldn't need read locks and it seems to screw up on some boxes anyway.. DupLiteSnapLibIOU::flock($stateHandle, LOCK_EX);
+               // RSR we shouldn't need read locks and it seems to screw up on some boxes anyway.. SnapLibIOU::flock($stateHandle, LOCK_EX);
 
                 $stateString = fread($stateHandle, filesize($stateFilepath));
 
@@ -41,9 +40,9 @@ class DAWSExpandState extends DupArchiveExpandState
 
                 self::$instance->fileRenames = (array)(self::$instance->fileRenames);
 
-           //     DupLiteSnapLibIOU::flock($stateHandle, LOCK_UN);
+           //     SnapLibIOU::flock($stateHandle, LOCK_UN);
 
-                DupLiteSnapLibIOU::fclose($stateHandle);
+                SnapLibIOU::fclose($stateHandle);
             } else {
                 $reset = true;
             }
@@ -88,33 +87,33 @@ class DAWSExpandState extends DupArchiveExpandState
     {
         $stateFilepath = dirname(__FILE__).'/'.self::StateFilename;
 
-        $stateHandle = DupLiteSnapLibIOU::fopen($stateFilepath, 'w');
+        $stateHandle = SnapLibIOU::fopen($stateFilepath, 'w');
 
-        DupLiteSnapLibIOU::flock($stateHandle, LOCK_EX);
+        SnapLibIOU::flock($stateHandle, LOCK_EX);
 
         $this->initMembers();
 
-        DupLiteSnapLibIOU::fwrite($stateHandle, DupLiteSnapLibUtil::wp_json_encode($this));
+        SnapLibIOU::fwrite($stateHandle, json_encode($this));
 
-        DupLiteSnapLibIOU::flock($stateHandle, LOCK_UN);
+        SnapLibIOU::flock($stateHandle, LOCK_UN);
         
-        DupLiteSnapLibIOU::fclose($stateHandle);
+        SnapLibIOU::fclose($stateHandle);
     }
 
     public function save()
     {
         $stateFilepath = dirname(__FILE__).'/'.self::StateFilename;
 
-        $stateHandle = DupLiteSnapLibIOU::fopen($stateFilepath, 'w');
+        $stateHandle = SnapLibIOU::fopen($stateFilepath, 'w');
 
-        DupLiteSnapLibIOU::flock($stateHandle, LOCK_EX);
+        SnapLibIOU::flock($stateHandle, LOCK_EX);
 
         DupArchiveUtil::tlog("saving state");
-        DupLiteSnapLibIOU::fwrite($stateHandle, DupLiteSnapLibUtil::wp_json_encode($this));
+        SnapLibIOU::fwrite($stateHandle, json_encode($this));
 
-        DupLiteSnapLibIOU::flock($stateHandle, LOCK_UN);
+        SnapLibIOU::flock($stateHandle, LOCK_UN);
         
-        DupLiteSnapLibIOU::fclose($stateHandle);
+        SnapLibIOU::fclose($stateHandle);
     }
 
     private function initMembers()

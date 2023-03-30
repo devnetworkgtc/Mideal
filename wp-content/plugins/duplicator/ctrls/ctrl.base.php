@@ -1,5 +1,4 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 // Exit if accessed directly
 if (! defined('DUPLICATOR_VERSION')) exit;
 
@@ -90,7 +89,7 @@ class DUP_CTRL_Result
 
 	function __construct(DUP_CTRL_Base $CTRL_OBJ)
 	{
-		DUP_Util::hasCapability('export');
+		DUP_Util::hasCapability('read');
 		$this->timeStart = $this->microtimeFloat();
 		$this->CTRL		 = $CTRL_OBJ;
 
@@ -122,7 +121,7 @@ class DUP_CTRL_Result
 
 		switch ($this->CTRL->returnType) {
 			case 'JSON' :
-				return DupLiteSnapLibUtil::wp_json_encode($this);
+				return json_encode($this);
 				break;
 			case 'PHP' :
 				return $this;
@@ -148,7 +147,7 @@ class DUP_CTRL_Result
 		$payload['Line']	 = $exception->getLine();
 		$payload['Trace']	 = $exception->getTraceAsString();
 		$this->process($payload, DUP_CTRL_Status::ERROR);
-		die(DupLiteSnapLibUtil::wp_json_encode($this));
+		die(json_encode($this));
 	}
 
 	private function getProcessTime()

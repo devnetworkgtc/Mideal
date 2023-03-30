@@ -1,5 +1,4 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 // Exit if accessed directly
 if (!defined('DUPLICATOR_VERSION')) exit;
 
@@ -37,12 +36,7 @@ class DUP_Archive
     public $Size              = 0;
     public $Dirs              = array();
     public $Files             = array();
-
-    /**
-     *
-     * @var DUP_Archive_Filter_Info
-     */
-    public $FilterInfo        = null;
+    public $FilterInfo;
     public $RecursiveLinks    = array();
     public $file_count        = -1;
     //PROTECTED
@@ -349,10 +343,8 @@ class DUP_Archive
 				$this->FilterInfo->Dirs->Core[] = $wp_content.'/'.$backwpup_cfg_logfolder;
 			}
 		}
-		$duplicator_global_file_filters_on = apply_filters('duplicator_global_file_filters_on', $GLOBALS['DUPLICATOR_GLOBAL_FILE_FILTERS_ON']);
 		if ($GLOBALS['DUPLICATOR_GLOBAL_FILE_FILTERS_ON']) {
-			$duplicator_global_file_filters = apply_filters('duplicator_global_file_filters', $GLOBALS['DUPLICATOR_GLOBAL_FILE_FILTERS']);
-			$this->FilterInfo->Files->Global = $duplicator_global_file_filters;
+			$this->FilterInfo->Files->Global = $GLOBALS['DUPLICATOR_GLOBAL_FILE_FILTERS'];
 		}
 
 		// Prevent adding double wp-content dir conflicts

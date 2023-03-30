@@ -8,7 +8,6 @@
         
         syncParams = null,
         saveParams = null,
-        ajaxUpload = conf.multipart,
         
         // UI translation
         translator = loco.l10n,
@@ -37,13 +36,6 @@
         saveButton,
         innerDiv = document.getElementById('loco-editor-inner')
     ;
-    
-    
-    // warn if ajax uploads are enabled but not supported
-    if( ajaxUpload && ! ( window.FormData && window.Blob ) ){
-        ajaxUpload = false;
-        loco.notices.warn("Your browser doesn't support ajax file uploads. Falling back to standard postdata");
-    }
 
 
     /**
@@ -113,21 +105,6 @@
 
 
     /**
-     * @param params {Object}
-     * @return FormData
-     */
-    function initMultiPart( params ){
-        var p, data = new FormData;
-        for( p in params ){
-            if( params.hasOwnProperty(p) ) {
-                data.append(p, params[p]);
-            }
-        }
-        return data;
-    }
-
-
-    /**
      * Post full editor contents to "posave" endpoint
      */    
     function doSaveAction( callback ){
@@ -137,20 +114,13 @@
             // Update saved time update
             $('#loco-po-modified').text( result.datetime||'[datetime error]' );
         }
-        var postData = $.extend( {locale:String(messages.locale()||'')}, saveParams||{} );
+        saveParams.locale = String( messages.locale() || '' );
         if( fsConnect ){
-            fsConnect.applyCreds(postData);
+            fsConnect.applyCreds( saveParams );
         }
-        // submit PO as concrete file if configured
-        if( ajaxUpload ){
-            var fname = String(postData.path).split('/').pop() || 'untitled.po';
-            postData = initMultiPart(postData);
-            postData.append('po', new Blob([String(messages)],{type:'application/x-gettext'}), fname );
-        }
-        else {
-            postData.data = String(messages);
-        }
-        loco.ajax.post( 'save', postData, onSuccess, callback );
+        // adding PO source last for easier debugging in network inspector
+        saveParams.data = String( messages );
+        loco.ajax.post( 'save', saveParams, onSuccess, callback );
     }
     
 

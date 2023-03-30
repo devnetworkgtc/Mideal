@@ -133,10 +133,13 @@ class Loco_fs_Locations extends ArrayObject {
      * @return Loco_fs_Locations
      */ 
     public function add( $path ){
-        foreach( $this->expand($path) as $path ){
-            // path must have trailing slash, otherwise "/plugins/foobar" would match "/plugins/foo/"
-            $this[$path] = strlen($path);
+        $path = Loco_fs_File::abs($path);
+        if( ! $path ){
+            throw new InvalidArgumentException('Location must be absolute path');
         }
+        // path must have trailing slash, otherwise "/plugins/foobar" would match "/plugins/foo/"
+        $path = trailingslashit($path);
+        $this[$path] = strlen($path);
         return $this;
     }
 
@@ -147,11 +150,10 @@ class Loco_fs_Locations extends ArrayObject {
      * @return bool whether path matched
      */    
     public function check( $path ){
-        foreach( $this->expand($path) as $path ){
-            foreach( $this as $prefix => $length ){
-                if( $prefix === $path || substr($path,0,$length) === $prefix ){
-                    return true;
-                }
+        $path = trailingslashit( Loco_fs_File::abs($path) );
+        foreach( $this as $prefix => $length ){
+            if( $prefix === $path || substr($path,0,$length) === $prefix ){
+                return true;
             }
         }
         return false;
@@ -165,37 +167,15 @@ class Loco_fs_Locations extends ArrayObject {
      * @return string | null
      */
     public function rel( $path ){
-        foreach( $this->expand($path) as $path ){
-            foreach( $this as $prefix => $length ){
-                if( $prefix === $path ){
-                    return '.';
-                }
-                if( substr($path,0,$length) === $prefix ){
-                    return untrailingslashit( substr($path,$length) );
-                }
+        $path = trailingslashit( Loco_fs_File::abs($path) );
+        foreach( $this as $prefix => $length ){
+            if( $prefix === $path ){
+                return '.';
+            }
+            if( substr($path,0,$length) === $prefix ){
+                return untrailingslashit( substr($path,$length) );
             }
         }
-        return null;
     }
-
-
-    /**
-     * @param string
-     * @return string[]
-     */
-    private function expand( $path ){
-        $path = Loco_fs_File::abs($path);
-        if( ! $path ){
-            throw new InvalidArgumentException('Expected absolute path');
-        }
-        $paths = array( trailingslashit($path) );
-        // add real path if differs
-        $real = realpath($path);
-        if( $real && $real !== $path ){
-            $paths[] = trailingslashit($real);
-        }
-        return $paths;
-    }
-    
     
 }

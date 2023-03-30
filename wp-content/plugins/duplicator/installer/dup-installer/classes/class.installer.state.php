@@ -1,5 +1,5 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+defined("ABSPATH") or die("");
 
 abstract class DUPX_InstallerMode
 {
@@ -23,7 +23,7 @@ class DUPX_InstallerState
         self::$state_filepath = dirname(__FILE__).'/../installer-state.txt';
 
         if($clearState) {
-            DupLiteSnapLibIOU::rm(self::$state_filepath);
+            SnapLibIOU::rm(self::$state_filepath);
         }
     }
 
@@ -55,7 +55,7 @@ class DUPX_InstallerState
 				$outerWPSettingsPath	= dirname($GLOBALS['DUPX_ROOT'])."/wp-settings.php";
 
 				if ((file_exists($wpConfigPath) || (@file_exists($outerWPConfigPath) && !@file_exists($outerWPSettingsPath))) && @file_exists("{$GLOBALS['DUPX_ROOT']}/wp-includes") && @file_exists("{$GLOBALS['DUPX_ROOT']}/wp-admin")) {
-					require_once($GLOBALS['DUPX_INIT'].'/lib/config/class.wp.config.tranformer.php');
+					require_once($GLOBALS['DUPX_INIT'].'/classes/config/class.wp.config.tranformer.php');
 					$config_transformer = file_exists($wpConfigPath)
 											? new WPConfigTransformer($wpConfigPath)
 											: new WPConfigTransformer($outerWPConfigPath);
@@ -81,8 +81,10 @@ class DUPX_InstallerState
 
     public function save()
     {
-		$data = DupLiteSnapLibUtil::wp_json_encode($this);
+		$data = SnapLibStringU::jsonEncode($this);
 
-        DupLiteSnapLibIOU::filePutContents(self::$state_filepath, $data);
+        SnapLibIOU::filePutContents(self::$state_filepath, $data);
     }
 }
+
+DUPX_InstallerState::init($GLOBALS['INIT']);

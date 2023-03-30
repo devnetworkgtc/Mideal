@@ -143,8 +143,6 @@ function wpcf7_save_contact_form( $args = '', $context = 'save' ) {
 		'additional_settings' => null,
 	) );
 
-	$args = wp_unslash( $args );
-
 	$args['id'] = (int) $args['id'];
 
 	if ( -1 == $args['id'] ) {
@@ -205,7 +203,7 @@ function wpcf7_sanitize_form( $input, $default = '' ) {
 }
 
 function wpcf7_sanitize_mail( $input, $defaults = array() ) {
-	$input = wp_parse_args( $input, array(
+	$defaults = wp_parse_args( $defaults, array(
 		'active' => false,
 		'subject' => '',
 		'sender' => '',

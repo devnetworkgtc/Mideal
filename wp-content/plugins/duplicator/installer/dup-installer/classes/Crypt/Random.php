@@ -1,5 +1,5 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+
 /**
  * Random Number Generator
  *
@@ -147,8 +147,7 @@ if (!function_exists('crypt_random_string')) {
             }
 
             session_id(1);
-            if (DupLiteSnapLibUtil::wp_is_ini_value_changeable('session.use_cookies'))
-                ini_set('session.use_cookies', 0);
+            ini_set('session.use_cookies', 0);
             session_cache_limiter('');
             session_start();
 
@@ -172,8 +171,7 @@ if (!function_exists('crypt_random_string')) {
             if ($old_session_id != '') {
                 session_id($old_session_id);
                 session_start();
-                if (DupLiteSnapLibUtil::wp_is_ini_value_changeable('session.use_cookies'))
-                    ini_set('session.use_cookies', $old_use_cookies);
+                ini_set('session.use_cookies', $old_use_cookies);
                 session_cache_limiter($old_session_cache_limiter);
             } else {
                 if ($_OLD_SESSION !== false) {

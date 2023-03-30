@@ -1,5 +1,5 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+defined("ABSPATH") or die("");
 if (!defined('DUPLICATOR_VERSION')) exit; // Exit if accessed directly
 
 //?require_once (DUPLICATOR_PLUGIN_PATH.'classes/package/class.pack.archive.php');
@@ -35,8 +35,11 @@ class DUP_DupArchive
 
 		DUP_LOG::trace("start");
         try {
-            DUP_Log::Open($package->NameHash);
-			DUP_Log::trace("c2");
+            if(DUP_Log::$logFileHandle == null) {
+                DUP_Log::Open($package->NameHash);
+            }
+
+			DUP_LOG::trace("c2");
             
             if ($buildProgress->retries > DUPLICATOR_MAX_BUILD_RETRIES) {
 				DUP_LOG::trace("c3");
@@ -192,7 +195,7 @@ class DUP_DupArchive
 
                     $totalFileCount = count($scanReport->ARC->Files);
 
-                    $package->Status = DupLiteSnapLibUtil::getWorkPercent(DUP_PackageStatus::ARCSTART, DUP_PackageStatus::ARCVALIDATION, $totalFileCount, $createState->currentFileIndex);
+                    $package->Status = SnapLibUtil::getWorkPercent(DUP_PackageStatus::ARCSTART, DUP_PackageStatus::ARCVALIDATION, $totalFileCount, $createState->currentFileIndex);
 
                     $buildProgress->retries = 0;
 
@@ -293,7 +296,7 @@ class DUP_DupArchive
                         $totalFileCount = count($scanReport->ARC->Files);
                         $archiveSize    = @filesize($expandState->archivePath);
 
-                        $package->Status = DupLiteSnapLibUtil::getWorkPercent(DUP_PackageStatus::ARCVALIDATION, DUP_PackageStatus::COMPLETE, $archiveSize,
+                        $package->Status = SnapLibUtil::getWorkPercent(DUP_PackageStatus::ARCVALIDATION, DUP_PackageStatus::COMPLETE, $archiveSize,
                                 $expandState->archiveOffset);
                         DUP_LOG::TraceObject("package status after expand=", $package->Status);
                         DUP_LOG::Trace("archive size:{$archiveSize} expand offset:{$expandState->archiveOffset}");

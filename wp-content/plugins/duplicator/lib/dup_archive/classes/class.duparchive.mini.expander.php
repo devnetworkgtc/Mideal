@@ -1,5 +1,5 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+
 //---------- DUPARCHIVE MINI EXPANDER: The contents of this file will be injected into the installer bootlog at build time ------------------------
 
 class DupArchiveHeaderMiniU
@@ -127,7 +127,7 @@ class DupArchiveMiniGlobHeader //extends HeaderBase
         fread($archiveHandle, 4);
 
         if ($skipGlob) {
-          //  DupLiteSnapLibIOU::fseek($archiveHandle, $instance->storedSize, SEEK_CUR);
+          //  SnapLibIOU::fseek($archiveHandle, $instance->storedSize, SEEK_CUR);
 		    if(fseek($archiveHandle, $instance->storedSize, SEEK_CUR) === -1)
 			{
                 throw new Exception("Can't fseek when skipping glob at location:".ftell($archiveHandle));
@@ -148,9 +148,6 @@ class DupArchiveMiniHeader
     private function __construct()
     {
         // Prevent instantiation
-        if (!class_exists('DUPX_Bootstrap')) {
-            throw new Exception('Class DUPX_Bootstrap not found');
-        }
     }
 
     public static function readFromArchive($archiveHandle)
@@ -296,7 +293,7 @@ class DupArchiveMiniExpander
                           //  $mode = $directoryHeader->permissions;
 
                             // rodo handle this more elegantly @mkdir($directory, $directoryHeader->permissions, true);
-                            DUPX_Bootstrap::mkdir($directory, 'u+rwx', true);
+                            @mkdir($directory, 0755, true);
 
 
                             $writeInfo->directoryWriteCount++;
@@ -352,13 +349,19 @@ class DupArchiveMiniExpander
 		{
 			/* @var $writeInfo DupArchiveMiniWriteInfo */
 			$parentDir = dirname($destFilePath);
-			if (!file_exists($parentDir)) {
-                if (!DUPX_Bootstrap::mkdir($parentDir, 'u+rwx', true)) {
-                    throw new Exception("Couldn't create {$parentDir}");
-                }
-            }
 
-            $destFileHandle = fopen($destFilePath, 'wb+');
+			if (!file_exists($parentDir)) {
+
+				$r = @mkdir($parentDir, 0755, true);
+
+				if(!$r)
+				{
+					throw new Exception("Couldn't create {$parentDir}");
+				}
+			}
+
+			$destFileHandle = fopen($destFilePath, 'wb+');
+
 			if ($destFileHandle === false) {
 				throw new Exception("Couldn't open {$destFilePath} for writing.");
 			}
@@ -374,14 +377,14 @@ class DupArchiveMiniExpander
 
 			fclose($destFileHandle);
 
-            DUPX_Bootstrap::chmod($destFilePath, 'u+rw');
+            @chmod($destFilePath, 0644);
 
 			self::validateExpandedFile($writeInfo);
 		} else {
 			if(touch($destFilePath) === false) {
 				throw new Exception("Couldn't create $destFilePath");
 			}
-            DUPX_Bootstrap::chmod($destFilePath, 'u+rw');
+            @chmod($destFilePath, 0644);
 		}
     }
 

@@ -1,7 +1,5 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 
-DUP_Handler::init_error_handler();
 DUP_Util::hasCapability('export');
 
 global $wpdb;

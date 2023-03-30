@@ -1,5 +1,4 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 // Exit if accessed directly
 if (! defined('DUPLICATOR_VERSION')) exit;
 
@@ -123,21 +122,12 @@ class DUP_Zip extends DUP_Archive
             $info = '';
             if (self::$networkFlush) {
                 foreach (self::$scanReport->ARC->Files as $file) {
-                    $file_size = filesize($file);
                     $localFileName = $archive->getLocalFilePath($file);
 
-                    if (is_readable($file)) {
-                        if (defined('DUPLICATOR_ZIP_ARCHIVE_ADD_FROM_STR') && DUPLICATOR_ZIP_ARCHIVE_ADD_FROM_STR && $file_size < DUP_Constants::ZIP_STRING_LIMIT && self::$zipArchive->addFromString($localFileName, file_get_contents($file))) {
-                            Dup_Log::Info("Adding {$file} to zip");
-                            self::$limitItems++;
-                            self::$countFiles++;
-                        } elseif (self::$zipArchive->addFile($file, $localFileName)) {
-                            Dup_Log::Info("Adding {$file} to zip");
-                            self::$limitItems++;
-                            self::$countFiles++;
-                        } else {
-                            $info .= "FILE: [{$file}]\n";
-                        }
+                    if (is_readable($file) && self::$zipArchive->addFile($file, $localFileName)) {
+                        Dup_Log::Info("Adding {$file} to zip");
+                        self::$limitItems++;
+                        self::$countFiles++;
                     } else {
                         $info .= "FILE: [{$file}]\n";
                     }
@@ -152,7 +142,7 @@ class DUP_Zip extends DUP_Archive
 
                     if(self::$countFiles % 500 == 0) {
                         // Every so many files update the status so the UI can display
-                        $archive->Package->Status = DupLiteSnapLibUtil::getWorkPercent(DUP_PackageStatus::ARCSTART, DUP_PackageStatus::ARCVALIDATION, $totalFileCount, self::$countFiles);
+                        $archive->Package->Status = SnapLibUtil::getWorkPercent(DUP_PackageStatus::ARCSTART, DUP_PackageStatus::ARCVALIDATION, $totalFileCount, self::$countFiles);
                         $archive->Package->update();
                     }
                 }
@@ -160,24 +150,17 @@ class DUP_Zip extends DUP_Archive
             //Normal
             else {
                 foreach (self::$scanReport->ARC->Files as $file) {
-                    $file_size = filesize($file);
                     $localFileName = $archive->getLocalFilePath($file);
 
-                    if (is_readable($file)) {
-                        if (defined('DUPLICATOR_ZIP_ARCHIVE_ADD_FROM_STR') && DUPLICATOR_ZIP_ARCHIVE_ADD_FROM_STR && $file_size < DUP_Constants::ZIP_STRING_LIMIT && self::$zipArchive->addFromString($localFileName, file_get_contents($file))) {
-                            self::$countFiles++;
-                        } elseif (self::$zipArchive->addFile($file, $localFileName)) {
-                            self::$countFiles++;
-                        } else {
-                            $info .= "FILE: [{$file}]\n";
-                        }
+                    if (is_readable($file) && self::$zipArchive->addFile($file, $localFileName)) {
+                        self::$countFiles++;
                     } else {
                         $info .= "FILE: [{$file}]\n";
                     }
 
                     if(self::$countFiles % 500 == 0) {
                         // Every so many files update the status so the UI can display
-                        $archive->Package->Status = DupLiteSnapLibUtil::getWorkPercent(DUP_PackageStatus::ARCSTART, DUP_PackageStatus::ARCVALIDATION, $totalFileCount, self::$countFiles);
+                        $archive->Package->Status = SnapLibUtil::getWorkPercent(DUP_PackageStatus::ARCSTART, DUP_PackageStatus::ARCVALIDATION, $totalFileCount, self::$countFiles);
                         $archive->Package->update();
                     }
                 }

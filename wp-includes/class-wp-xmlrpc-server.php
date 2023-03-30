@@ -3829,21 +3829,6 @@ class wp_xmlrpc_server extends IXR_Server {
 			return new IXR_Error( 403, __( 'Comment is required.' ) );
 		}
 
-		if (
-			'publish' === get_post_status( $post_id ) &&
-			! current_user_can( 'edit_post', $post_id ) &&
-			post_password_required( $post_id )
-		) {
-			return new IXR_Error( 403, __( 'Sorry, you are not allowed to comment on this post.' ) );
-		}
-
-		if (
-			'private' === get_post_status( $post_id ) &&
-			! current_user_can( 'read_post', $post_id )
-		) {
-			return new IXR_Error( 403, __( 'Sorry, you are not allowed to comment on this post.' ) );
-		}
-
 		$comment = array(
 			'comment_post_ID' => $post_id,
 			'comment_content' => $content_struct['content'],
@@ -4248,8 +4233,7 @@ class wp_xmlrpc_server extends IXR_Server {
 		/** This action is documented in wp-includes/class-wp-xmlrpc-server.php */
 		do_action( 'xmlrpc_call', 'wp.getMediaItem' );
 
-		$attachment = get_post( $attachment_id );
-		if ( ! $attachment || 'attachment' !== $attachment->post_type ) {
+		if ( ! $attachment = get_post( $attachment_id ) ) {
 			return new IXR_Error( 404, __( 'Invalid attachment ID.' ) );
 		}
 
@@ -6250,14 +6234,7 @@ class wp_xmlrpc_server extends IXR_Server {
 		}
 
 		if ( is_multisite() && upload_is_user_over_quota( false ) ) {
-			$this->error = new IXR_Error(
-				401,
-				sprintf(
-					/* translators: %s: allowed space allocation */
-					__( 'Sorry, you have used your space allocation of %s. Please delete some files to upload more files.' ),
-					size_format( get_space_allowed() * MB_IN_BYTES )
-				)
-			);
+			$this->error = new IXR_Error( 401, __( 'Sorry, you have used your space allocation.' ) );
 			return $this->error;
 		}
 

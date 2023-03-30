@@ -12,7 +12,7 @@ class Loco_fs_Directory extends Loco_fs_File {
 
 
     /**
-     * {@inheritDoc}
+     * @override
      */
     public function isDirectory(){
         return true;
@@ -21,7 +21,6 @@ class Loco_fs_Directory extends Loco_fs_File {
 
     /**
      * Set recursive flag for use when traversing directory trees
-     * @param bool
      * @return Loco_fs_Directory
      */
     public function setRecursive( $bool ){
@@ -34,8 +33,12 @@ class Loco_fs_Directory extends Loco_fs_File {
      * @return bool
      */
     public function isRecursive(){
+        if( func_num_args() ){
+            throw new InvalidArgumentException('Did you mean to use setRecursive?');
+        }
         return $this->r;
     }
+
 
 
     /**
@@ -50,5 +53,6 @@ class Loco_fs_Directory extends Loco_fs_File {
          }
          return $this;
      }
+
 
 }

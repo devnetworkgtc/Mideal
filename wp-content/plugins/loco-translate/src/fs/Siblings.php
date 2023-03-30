@@ -34,9 +34,10 @@ class Loco_fs_Siblings {
     }
 
 
+
     /**
      * Get all dependant files (including self) that actually exist on disk
-     * @return Loco_fs_File[]
+     * @return array
      */
     public function expand(){
         $siblings = array();
@@ -69,6 +70,7 @@ class Loco_fs_Siblings {
 
         return $siblings;
     }
+
 
 
     /**

@@ -102,7 +102,7 @@ function get_comment_author_email( $comment_ID = 0 ) {
  * Display the email of the author of the current global $comment.
  *
  * Care should be taken to protect the email address and assure that email
- * harvesters do not capture your commenter's email address. Most assume that
+ * harvesters do not capture your commentors' email address. Most assume that
  * their email address will not appear in raw form on the site. Doing so will
  * enable anyone, including those that people don't want to get the email
  * address and use it for their own means good and bad.
@@ -133,7 +133,7 @@ function comment_author_email( $comment_ID = 0 ) {
  * Display the html email link to the author of the current comment.
  *
  * Care should be taken to protect the email address and assure that email
- * harvesters do not capture your commenter's email address. Most assume that
+ * harvesters do not capture your commentors' email address. Most assume that
  * their email address will not appear in raw form on the site. Doing so will
  * enable anyone, including those that people don't want to get the email
  * address and use it for their own means good and bad.
@@ -157,7 +157,7 @@ function comment_author_email_link( $linktext = '', $before = '', $after = '', $
  * Return the html email link to the author of the current comment.
  *
  * Care should be taken to protect the email address and assure that email
- * harvesters do not capture your commenter's email address. Most assume that
+ * harvesters do not capture your commentors' email address. Most assume that
  * their email address will not appear in raw form on the site. Doing so will
  * enable anyone, including those that people don't want to get the email
  * address and use it for their own means good and bad.
@@ -591,28 +591,28 @@ function comment_date( $d = '', $comment_ID = 0 ) {
  * @return string The maybe truncated comment with 20 words or less.
  */
 function get_comment_excerpt( $comment_ID = 0 ) {
-	$comment = get_comment( $comment_ID );
-
-	if ( ! post_password_required( $comment->comment_post_ID ) ) {
-		$comment_text = strip_tags( str_replace( array( "\n", "\r" ), ' ', $comment->comment_content ) );
-	} else {
-		$comment_text = __( 'Password protected' );
-	}
-
-	/* translators: Maximum number of words used in a comment excerpt. */
-	$comment_excerpt_length = intval( _x( '20', 'comment_excerpt_length' ) );
+	$comment      = get_comment( $comment_ID );
+	$comment_text = strip_tags( str_replace( array( "\n", "\r" ), ' ', $comment->comment_content ) );
+	$words        = explode( ' ', $comment_text );
 
 	/**
-	 * Filters the maximum number of words used in the comment excerpt.
+	 * Filters the amount of words used in the comment excerpt.
 	 *
 	 * @since 4.4.0
 	 *
 	 * @param int $comment_excerpt_length The amount of words you want to display in the comment excerpt.
 	 */
-	$comment_excerpt_length = apply_filters( 'comment_excerpt_length', $comment_excerpt_length );
+	$comment_excerpt_length = apply_filters( 'comment_excerpt_length', 20 );
 
-	$excerpt = wp_trim_words( $comment_text, $comment_excerpt_length, '&hellip;' );
+	$use_ellipsis = count( $words ) > $comment_excerpt_length;
+	if ( $use_ellipsis ) {
+		$words = array_slice( $words, 0, $comment_excerpt_length );
+	}
 
+	$excerpt = trim( join( ' ', $words ) );
+	if ( $use_ellipsis ) {
+		$excerpt .= '&hellip;';
+	}
 	/**
 	 * Filters the retrieved comment excerpt.
 	 *
@@ -999,7 +999,7 @@ function comment_text( $comment_ID = 0, $args = array() ) {
 	 * @see Walker_Comment::comment()
 	 *
 	 * @param string          $comment_text Text of the current comment.
-	 * @param WP_Comment|null $comment      The comment object. Null if not found.
+	 * @param WP_Comment|null $comment      The comment object.
 	 * @param array           $args         An array of arguments.
 	 */
 	echo apply_filters( 'comment_text', $comment_text, $comment, $args );
@@ -2311,13 +2311,13 @@ function comment_form( $args = array(), $post_id = null ) {
 		/** This filter is documented in wp-includes/link-template.php */
 		'must_log_in'          => '<p class="must-log-in">' . sprintf(
 			/* translators: %s: login URL */
-			__( 'You must be <a href="%s">logged in</a> to post a comment.' ),
+									__( 'You must be <a href="%s">logged in</a> to post a comment.' ),
 			wp_login_url( apply_filters( 'the_permalink', get_permalink( $post_id ), $post_id ) )
 		) . '</p>',
 		/** This filter is documented in wp-includes/link-template.php */
 		'logged_in_as'         => '<p class="logged-in-as">' . sprintf(
 			/* translators: 1: edit user link, 2: accessibility text, 3: user name, 4: logout URL */
-			__( '<a href="%1$s" aria-label="%2$s">Logged in as %3$s</a>. <a href="%4$s">Log out?</a>' ),
+									__( '<a href="%1$s" aria-label="%2$s">Logged in as %3$s</a>. <a href="%4$s">Log out?</a>' ),
 			get_edit_user_link(),
 			/* translators: %s: user name */
 									esc_attr( sprintf( __( 'Logged in as %s. Edit your profile.' ), $user_identity ) ),

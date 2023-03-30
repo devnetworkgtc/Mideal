@@ -1,6 +1,3 @@
-<?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
-?>
 <style>
 	div.success {color:#4A8254}
 	div.failed {color:red}

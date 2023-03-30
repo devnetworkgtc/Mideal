@@ -82,10 +82,9 @@ class Loco_mvc_AdminRouter extends Loco_hooks_Hookable {
     }
 
 
+
     /**
      * Early hook as soon as we know what screen will be rendered
-     * @param WP_Screen
-     * @return void
      */
     public function on_current_screen( WP_Screen $screen ){
         $action = isset($_GET['action']) ? $_GET['action'] : null;
@@ -93,13 +92,12 @@ class Loco_mvc_AdminRouter extends Loco_hooks_Hookable {
     }
 
 
+
     /**
      * Instantiate admin page controller from current screen.
      * This is called early (before renderPage) so controller can listen on other hooks.
      * 
-     * @param WP_Screen
-     * @param string 
-     * @return Loco_mvc_AdminController|null
+     * @return Loco_mvc_AdminController
      */
     public function initPage( WP_Screen $screen, $action = '' ){
         $class = null;
@@ -111,7 +109,7 @@ class Loco_mvc_AdminRouter extends Loco_hooks_Hookable {
         }
         if( is_null($class) ){
             $this->ctrl = null;
-            return null;
+            return;
         }
         // class should exist, so throw fatal if it doesn't
         $this->ctrl = new $class;
@@ -149,10 +147,10 @@ class Loco_mvc_AdminRouter extends Loco_hooks_Hookable {
     }
 
 
+
     /**
      * Convert WordPress internal WPScreen $id into route prefix for an admin page controller
-     * @param WP_Screen
-     * @return string|null
+     * @return string
      */
     private static function screenToPage( WP_Screen $screen ){
         // Hooked menu slug is either "toplevel_page_loco" or "{title}_page_loco-{page}"
@@ -165,17 +163,14 @@ class Loco_mvc_AdminRouter extends Loco_hooks_Hookable {
             $page = substr( $id, $start+11 ) or $page = '';
             return $page;
         }
-        return null;
     }
+
 
 
     /**
      * Get unvalidated controller class for given route parameters
      * Abstracted from initPage so we can validate routes in self::generate
-     * @param string
-     * @param string
-     * @param array reference
-     * @return string|null
+     * @return string
      */
     private static function pageToClass( $page, $action, array &$args ){
         $routes = array (
@@ -205,7 +200,6 @@ class Loco_mvc_AdminRouter extends Loco_hooks_Hookable {
             '{type}-file-edit' => 'file_Edit',
             '{type}-file-info' => 'file_Info',
             '{type}-file-diff' => 'file_Diff',
-            '{type}-file-move' => 'file_Move',
             '{type}-file-delete' => 'file_Delete',
             // test routes that don't actually exist
             'test-no-class' => 'test_NonExistantClass',
@@ -227,14 +221,12 @@ class Loco_mvc_AdminRouter extends Loco_hooks_Hookable {
         }
         // debug routing failures:
         // throw new Exception( sprintf('Failed to get page class from $page=%s',$page) );
-        return null;
     }
 
 
 
     /**
      * Main entry point for admin menu callback, establishes page and hands off to controller
-     * @return void
      */
     public function renderPage(){
         try {

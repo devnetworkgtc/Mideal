@@ -1,5 +1,5 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+defined("ABSPATH") or die("");
 
 /**
  * Used to generate a thick box inline dialog such as an alert or confirm pop-up

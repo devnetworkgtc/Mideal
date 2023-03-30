@@ -1,5 +1,4 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 // Exit if accessed directly
 if (! defined('DUPLICATOR_VERSION')) exit;
 
@@ -19,9 +18,11 @@ require_once(DUPLICATOR_PLUGIN_PATH.'/classes/package/duparchive/class.pack.arch
  */
 function duplicator_package_scan()
 {
-    DUP_Handler::init_error_handler();
+    $nonce = sanitize_text_field($_REQUEST['nonce']);
+	if (!wp_verify_nonce($nonce, 'duplicator_package_scan')) {
+		die('An unathorized security request was made to this page. Please try again!');
+	}
 
-    check_ajax_referer('duplicator_package_scan', 'nonce');
     DUP_Util::hasCapability('export');
 
     header('Content-Type: application/json;');
@@ -51,11 +52,9 @@ function duplicator_package_scan()
  */
 function duplicator_package_build()
 {
-    DUP_Handler::init_error_handler();
-
-    check_ajax_referer('duplicator_package_build', 'nonce');
     DUP_Util::hasCapability('export');
 
+    check_ajax_referer('duplicator_package_build', 'nonce');
     header('Content-Type: application/json');
 
     @set_time_limit(0);
@@ -83,7 +82,7 @@ function duplicator_package_build()
     $json['runtime'] = $Package->Runtime;
     $json['exeSize'] = $Package->ExeSize;
     $json['archiveSize'] = $Package->ZipSize;
-    $json_response   = DupLiteSnapLibUtil::wp_json_encode($json);
+    $json_response   = json_encode($json);
 
     //Simulate a Host Build Interrupt
 	//die(0);
@@ -99,12 +98,10 @@ function duplicator_package_build()
  */
 function duplicator_duparchive_package_build()
 {
-    DUP_Handler::init_error_handler();
-
     DUP_LOG::Trace("call to duplicator_duparchive_package_build");
 
-    check_ajax_referer('duplicator_duparchive_package_build', 'nonce');
     DUP_Util::hasCapability('export');
+    check_ajax_referer('duplicator_duparchive_package_build', 'nonce');
     header('Content-Type: application/json');
 
     @set_time_limit(0);
@@ -116,13 +113,15 @@ function duplicator_duparchive_package_build()
     $active_package_id = DUP_Settings::Get('active_package_id');
 
     if ($active_package_id == -1) {
+
         $package = DUP_Package::getActive();
         $package->save('daf');
-        DUP_Log::TraceObject("saving active package as new id={$package->ID}", $package);
+        DUP_Log::TraceObject("saving active package as new id={$package->ID}", package);
         DUP_Settings::Set('active_package_id', $package->ID);
         DUP_Settings::Save();
     } else {
-        DUP_Log::TraceObject("getting active package by id {$active_package_id}", $package);
+
+        DUP_Log::TraceObject("getting active package by id {$active_package_id}", package);
         $package = DUP_Package::getByID($active_package_id);
     }
 
@@ -187,7 +186,7 @@ function duplicator_duparchive_package_build()
         $json['status'] = 4;
     }
 
-    $json_response = DupLiteSnapLibUtil::wp_json_encode($json);
+    $json_response = json_encode($json);
 
     Dup_Log::TraceObject('json response', $json_response);
     error_reporting($errLevel);
@@ -203,9 +202,8 @@ function duplicator_duparchive_package_build()
  */
 function duplicator_package_delete()
 {
-    DUP_Handler::init_error_handler();
-    check_ajax_referer('duplicator_package_delete', 'nonce');
-    DUP_Util::hasCapability('export');    
+    DUP_Util::hasCapability('export');
+    check_ajax_referer('package_list', 'nonce');
 
 	function _unlinkFile($file) {
 		if (! file_exists($file)) {
@@ -238,26 +236,26 @@ function duplicator_package_delete()
                     $nameHash  = "{$row['name']}_{$row['hash']}";
                     $delResult = $wpdb->query($wpdb->prepare("DELETE FROM `{$tblName}` WHERE id = %d", $id));
                     if ($delResult != 0) {
-                        //TMP FILES
-                        $globTmpFiles = glob(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH_TMP."/{$nameHash}*"));
-                        foreach ($globTmpFiles as $globTmpFile) {
-                            _unlinkFile($globTmpFile);
-                        }
 
-                        //WP-SNAPSHOT FILES
-                        $globSnapshotFiles = glob(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH."/{$nameHash}*"));
-                        foreach ($globSnapshotFiles as $globSnapshotFile) {
-                            _unlinkFile($globSnapshotFile);
-                        }
-                        // _unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH."/{$nameHash}.log"));
+						//TMP FILES
+						_unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH_TMP."/{$nameHash}_archive.daf"));
+                        _unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH_TMP."/{$nameHash}_archive.zip"));
+                        _unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH_TMP."/{$nameHash}_database.sql"));
+                        _unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH_TMP."/{$nameHash}_installer.php"));
+
+						//WP-SNAPSHOT FILES
+                        _unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH."/{$nameHash}_archive.daf"));
+                        _unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH."/{$nameHash}_archive.zip"));
+                        _unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH."/{$nameHash}_database.sql"));
+                        _unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH."/{$nameHash}_installer.php"));
+                        _unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH."/{$nameHash}_scan.json"));
+						_unlinkFile(DUP_Util::safePath(DUPLICATOR_SSDIR_PATH."/{$nameHash}.log"));
 
                         //Unfinished Zip files
-                        /*
                         $tmpZip = DUPLICATOR_SSDIR_PATH_TMP."/{$nameHash}_archive.zip.*";
                         if ($tmpZip !== false) {
                             array_map('unlink', glob($tmpZip));
                         }
-                        */
                         $delCount++;
                     }
                 }
@@ -265,12 +263,12 @@ function duplicator_package_delete()
         }
     } catch (Exception $e) {
         $json['error'] = "{$e}";
-        die(DupLiteSnapLibUtil::wp_json_encode($json));
+        die(json_encode($json));
     }
 
     $json['ids']     = "{$postIDs}";
     $json['removed'] = $delCount;
-    echo DupLiteSnapLibUtil::wp_json_encode($json);
+    echo json_encode($json);
     die();
 }
 
@@ -285,13 +283,6 @@ function duplicator_active_package_info()
 {
     ob_start();
     try {
-        DUP_Handler::init_error_handler();
-        DUP_Util::hasCapability('export', DUP_Util::SECURE_ISSUE_THROW);
-
-        if (!check_ajax_referer('duplicator_active_package_info', 'nonce', false)) {
-            throw new Exception(__('An unathorized security request was made to this page. Please try again!','duplicator'));
-        }
-
         global $wpdb;
 
         $error  = false;
@@ -304,6 +295,11 @@ function duplicator_active_package_info()
             'html' => '',
             'message' => ''
         );
+
+        $nonce = sanitize_text_field($_POST['nonce']);
+        if (!wp_verify_nonce($nonce, 'duplicator_active_package_info')) {
+             throw new Exception(__('An unathorized security request was made to this page. Please try again!','duplicator'));
+        }
 
         $result['active_package']['present'] = DUP_Package::is_active_package_present();
 
@@ -356,11 +352,9 @@ class DUP_CTRL_Package extends DUP_CTRL_Base
      */
     public function addQuickFilters($post)
     {
-        DUP_Handler::init_error_handler();
-
-        check_ajax_referer('DUP_CTRL_Package_addQuickFilters', 'nonce');
-        DUP_Util::hasCapability('export');
         $post   = $this->postParamMerge($post);
+        $action = sanitize_text_field($post['action']);
+        check_ajax_referer($action, 'nonce');
         $result = new DUP_CTRL_Result($this);
 
         try {
@@ -412,17 +406,19 @@ class DUP_CTRL_Package extends DUP_CTRL_Base
      */
     function getPackageFile($post)
     {
-        DUP_Handler::init_error_handler();
-
-        check_ajax_referer('DUP_CTRL_Package_getPackageFile', 'nonce' );
-        DUP_Util::hasCapability('export');
         $params = $this->postParamMerge($post);
+        $nonce = sanitize_text_field($_GET['nonce']);
+        if (!wp_verify_nonce($nonce, 'DUP_CTRL_Package_getPackageFile')) {
+            die('An unathorized security request was made to this page. Please try again!');
+        }
 
         $params = $this->getParamMerge($params);
         $result = new DUP_CTRL_Result($this);
 
         try {
             //CONTROLLER LOGIC
+            DUP_Util::hasCapability('export');
+
             $request   = stripslashes_deep($_REQUEST);
             $which     = (int) $request['which'];
             $packageId = (int) $request['package_id'];
@@ -511,12 +507,11 @@ class DUP_CTRL_Package extends DUP_CTRL_Base
      */
 	public function getActivePackageStatus($post)
 	{
-        DUP_Handler::init_error_handler();
-        
-        check_ajax_referer('DUP_CTRL_Package_getActivePackageStatus', 'nonce');
-        DUP_Util::hasCapability('export');
-
-        $post = $this->postParamMerge($post);        
+        $post = $this->postParamMerge($post);
+        $nonce = sanitize_text_field($post['nonce']);
+        if (!wp_verify_nonce($nonce, 'DUP_CTRL_Package_getActivePackageStatus')) {
+            die('An unathorized security request was made to this page. Please try again!');
+        }
 		$result = new DUP_CTRL_Result($this);
 
 		try

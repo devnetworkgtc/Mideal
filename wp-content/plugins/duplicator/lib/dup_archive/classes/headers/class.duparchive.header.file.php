@@ -1,5 +1,4 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
 require_once(dirname(__FILE__).'/../util/class.duparchive.util.php');
 require_once(dirname(__FILE__).'/class.duparchive.header.u.php');
 
@@ -29,7 +28,7 @@ class DupArchiveFileHeader// extends HeaderBase
 
         // RSR TODO Populate fields based on file already on system
         // profile ok
-        $instance->fileSize           = DupLiteSnapLibIOU::filesize($filepath);
+        $instance->fileSize           = SnapLibIOU::filesize($filepath);
         // end profile ok
 
         // profile ok
@@ -37,7 +36,7 @@ class DupArchiveFileHeader// extends HeaderBase
         // end profile ok
 
         // profile ok
-        $instance->mtime              = DupLiteSnapLibIOU::filemtime($filepath);
+        $instance->mtime              = SnapLibIOU::filemtime($filepath);
         // end profile ok
 
 		if($instance->fileSize > DupArchiveConstants::$MaxFilesizeForHashing) {
@@ -132,7 +131,7 @@ class DupArchiveFileHeader// extends HeaderBase
     {
         $headerString = '<F><FS>'.$this->fileSize.'</FS><MT>'.$this->mtime.'</MT><P>'.$this->permissions.'</P><HA>'.$this->hash.'</HA><RPL>'.$this->relativePathLength.'</RPL><RP>'.$this->relativePath.'</RP></F>';
         
-        //DupLiteSnapLibIOU::fwrite($archiveHandle, $headerString);
+        //SnapLibIOU::fwrite($archiveHandle, $headerString);
         $bytes_written = @fwrite($archiveHandle, $headerString);
 
         if ($bytes_written === false) {

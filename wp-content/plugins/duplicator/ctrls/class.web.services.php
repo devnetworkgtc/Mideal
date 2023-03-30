@@ -1,5 +1,5 @@
 <?php
-defined('ABSPATH') || defined('DUPXABSPATH') || exit;
+defined("ABSPATH") or die("");
 
 class DUP_Web_Services
 {
@@ -13,15 +13,6 @@ class DUP_Web_Services
     }
 
     /**
-     *
-     * @param DUP_Package $package
-     */
-    public static function package_delete_callback($package)
-    {
-        $package->delete();
-    }
-
-    /**
      * reset all ajax action
      *
      * the output must be json
@@ -30,14 +21,6 @@ class DUP_Web_Services
     {
         ob_start();
         try {
-            DUP_Handler::init_error_handler();
-
-            if (!check_ajax_referer('duplicator_reset_all_settings', 'nonce', false)) {
-                DUP_LOG::Trace('Security issue');
-                throw new Exception('Security issue');
-            }
-            DUP_Util::hasCapability('export', DUP_Util::SECURE_ISSUE_THROW);
-
             /** Execute function * */
             $error  = false;
             $result = array(
@@ -52,13 +35,17 @@ class DUP_Web_Services
                 throw new Exception('Security issue');
             }
 
-            DUP_Package::by_status_callback(array(__CLASS__,'package_delete_callback'),array(
+            $noCompletePakcs = DUP_Package::get_all_by_status(array(
                     array('op' => '<', 'status' => DUP_PackageStatus::COMPLETE)
             ));
 
+            /** Delete all not completed packages * */
+            foreach ($noCompletePakcs as $pack) {
+                $pack->delete();
+            }
+
             /** reset active package id * */
             DUP_Settings::Set('active_package_id', -1);
-            DUP_Settings::Save();
 
             /** Clean tmp folder * */
             DUP_Package::not_active_files_tmp_cleanup();
